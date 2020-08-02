@@ -11,7 +11,12 @@ class PointsController {
             return response.status(400).json({ message: 'Point not found.' })
         } 
 
-        return response.json(point)
+        const items = await knex('items')
+            .join('point_items', 'items.id', '=', 'point_items.item_id')
+            .where('point_items.point_id', id)
+            .select('items.title')
+
+        return response.json({ point, items })
     }
 
     async create(request: Request, response: Response) {
@@ -25,9 +30,9 @@ class PointsController {
             uf,
             items
         } = request.body;
-    
-        const trx = await knex.transaction();
 
+        const trx = await knex.transaction();
+    
         const point = {
             image: 'image-fake',
             name,
@@ -38,22 +43,22 @@ class PointsController {
             city,
             uf
         }
-    
-        const insertedIds = await trx('points').insert(point)
+
+        const insertedIds = await trx('points').insert(point);
         
-        const point_id = insertedIds[0]
+        const point_id = insertedIds[0];
             
         const pointItems = items.map((item_id: Number) => {
             return {
                 item_id,
-                point_id: point_id
+                point_id
             }
-        })
-    
-        await trx('point_items').insert(pointItems)
-    
-        return response.json({ 
-            id: point_id,
+        });
+
+        await trx('point_items').insert(pointItems);
+        
+        return response.json({
+            id: point_id, 
             ... point
         })
     }
