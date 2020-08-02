@@ -1,7 +1,10 @@
 import React, { useEffect, useState } from 'react';
+import axios from 'axios'
+
 import { Link } from 'react-router-dom'
 import { FiArrowLeft } from 'react-icons/fi'
 import { Map, TileLayer, Marker } from 'react-leaflet'
+
 import api from '../../services/api'
 
 import logo from '../../assets/logo.svg'
@@ -13,14 +16,43 @@ interface Item {
   image_url: string;
 }
 
+interface UFResponse {
+  geonames: [{
+    adminCodes1: {ISO3166_2: string}
+    geonameId: string
+  }];
+}
+
+interface Ufs {
+  initial: string;
+  code: string
+}
+
 const CreatePoint: React.FC = () => {
   const [items, setItems] = useState<Item[]>([])
+  const [ufs, setUfs] = useState<Ufs[]>([{
+    initial: '', 
+    code: ''
+  }])
 
   useEffect(() => {
     api.get('items').then(response => {
       setItems(response.data);
     })
   }, []);
+
+  useEffect(() => {
+    axios.get<UFResponse>('http://www.geonames.org/childrenJSON?geonameId=3469034').then(response => {
+      const ufInitials = response.data.geonames.map(uf => { 
+        return {
+          initial: uf.adminCodes1.ISO3166_2, 
+          code: uf.geonameId
+        }
+      });
+
+      setUfs(ufInitials)
+    })
+  }, [])
 
   return (
     <div id="page-create-point">
@@ -91,6 +123,9 @@ const CreatePoint: React.FC = () => {
               <label htmlFor="uf">Estado (UF)</label>
               <select name="uf" id="uf">
                 <option value="0">Selecione uma UF</option>
+                {ufs.map(uf => (
+                  <option key={uf.code} value={uf.initial}>{uf.initial}</option>
+                ))}
               </select>
             </div>
 
