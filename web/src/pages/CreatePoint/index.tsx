@@ -42,6 +42,8 @@ const CreatePoint: React.FC = () => {
     code: ''
   }])
   const [cities, setCities] = useState<string[]>([])
+  
+  const [initialPosition, setInitialPosition] = useState<[number, number]>([0,0])
 
   const [selectedUf, setSelectedUf] = useState('0')
   const [selectedCity, setSelectedCity] = useState('0')
@@ -83,6 +85,14 @@ const CreatePoint: React.FC = () => {
         setCities(cityName)
       })
   }, [selectedUf])
+
+  useEffect(() => {
+    navigator.geolocation.getCurrentPosition(position => {
+      const { latitude, longitude } = position.coords;
+
+      setInitialPosition([latitude, longitude])
+    })
+  }, [])
 
   function handleSelectUf(event: ChangeEvent<HTMLSelectElement>) {
     const uf = event.target.value;
@@ -157,7 +167,7 @@ const CreatePoint: React.FC = () => {
             <span>Selecione o endereco no mapa</span>
           </legend>
 
-          <Map center={[-6.419492, -35.1818588]} zoom={15} onclick={handleMapClick}>
+          <Map center={initialPosition} zoom={15} onclick={handleMapClick}>
             <TileLayer
               attribution='&amp;copy <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
